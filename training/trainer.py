@@ -7,7 +7,6 @@ from torch.utils.data import  DataLoader
 from label2img import ExVivoDataset
 from lightning_model import MyModelLightning
 from dataloader_val import ValDataset
-import neptune.new as neptune
 device = torch.device('cuda:0')
 import time
 
