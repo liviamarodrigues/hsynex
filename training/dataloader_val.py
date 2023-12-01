@@ -4,7 +4,6 @@ import pdb
 import torch
 import numpy as np
 import torch.nn as nn
-import matplotlib.pyplot as plt
 import nibabel as nib
 import pytorch_lightning as pl
 from pytorch3dunet.unet3d.model import UNet3D
