@@ -1,6 +1,5 @@
 import numpy as np
 import nibabel as nib
-import matplotlib.pyplot as plt
 from scipy.interpolate import RegularGridInterpolator
 from nibabel.orientations import axcodes2ornt, ornt_transform
 
