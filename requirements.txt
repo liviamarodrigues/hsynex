@@ -1,0 +1,9 @@
+kornia                    0.6.12                       
+nibabel                   5.1.0                        
+numpy                     1.25.1                       
+pytorch                   2.0.1                                                                                          
+pytorch-lightning         2.0.5                        
+scikit-image              0.21.0                       
+scikit-learn              1.3.0                        
+scipy                     1.11.1                       
+torchio                   0.18.92
