@@ -15,11 +15,11 @@ class InVivoInference():
         self.voxres = voxres
         self.aff = np.eye(4)    
         self.device = device
-        self.ckpt_hypo = '/space/calico/3/asterion/1/users/lr252/synth_hypothalamus/exvivo_synth/final_codes/inference/all_hypo.ckpt'
-        self.ckpt_subnuclei = '/space/calico/3/asterion/1/users/lr252/synth_hypothalamus/exvivo_synth/final_codes/inference/subn_hypo.ckpt'
+        self.ckpt_hypo = 'https://github.com/liviamarodrigues/hsynex/releases/download/weights/all_hypo.ckpt'
+        self.ckpt_subnuclei = 'https://github.com/liviamarodrigues/hsynex/releases/download/weights/subn_hypo.ckpt'
         
     def load_model(self, ckpt, model, idx):
-        teste_hyp = torch.load(ckpt)
+        teste_hyp = torch.utils.model_zoo.load_url(ckpt)
         tt_hyp = teste_hyp['state_dict']
         new_state_dict_seg_hyp = {}
         for keys_hyp, values_hyp in tt_hyp.items():
