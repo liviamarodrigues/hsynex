@@ -9,8 +9,8 @@ from skimage.morphology import dilation, cube
 class CreateInput():
     
     def __init__(self):
-        self.atlas_path = '/space/calico/3/asterion/1/users/lr252/synth_hypothalamus/exvivo_synth/final_codes/mni_icbm152_t1_tal_nlin_asym_09c.nii.gz'
-        self.atlas_seg_path = '/space/calico/3/asterion/1/users/lr252/synth_hypothalamus/exvivo_synth/final_codes/mni_icbm152_t1_tal_nlin_asym_09c.seg.nii.gz' 
+        self.atlas_path = 'mni_icbm152_t1_tal_nlin_asym_09c.nii.gz'
+        self.atlas_seg_path = 'mni_icbm152_t1_tal_nlin_asym_09c.seg.nii.gz' 
 
     def create_tmp_files(self, path, save_path):        
         name = os.path.basename(path)
