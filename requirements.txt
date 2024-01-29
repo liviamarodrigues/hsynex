@@ -1,4 +1,4 @@
-freesurfer                7.4
+python                    3.10
 kornia                    0.6.12                       
 nibabel                   5.1.0                        
 numpy                     1.25.1                       
