@@ -4,11 +4,25 @@ A tool for the hypothalamus and its subregions capable of working across differe
 
 The model was trained on synthetic images derived from ex vivo MRI label maps:
 
-<img scr=https://github.com/liviamarodrigues/hsynex/blob/main/github1.png>
+<img src=https://github.com/liviamarodrigues/hsynex/blob/main/github1.png>
 
 Example of testing images:
 
 <img src=https://github.com/liviamarodrigues/hsynex/blob/main/qualitative_data.png>
+
+
+| Label | Subregion |
+| ------| --------- |
+| 1  | left anterior inferior |
+| 2  | left posterior|
+| 3  | left tuberal inferior |
+| 4  | left tuberal superior |
+| 6  | left anterior superior |
+| 7  | right anterior inferior |
+| 8  | right  posterior |
+| 9  | right tuberal inferior |
+| 10 | right tuberal superior |
+| 12 | right anterior superior |
 
 ## USAGE
 
