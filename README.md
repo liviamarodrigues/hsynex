@@ -6,10 +6,11 @@ The model was trained on synthetic images derived from ex vivo MRI label maps:
 
 <img src=https://github.com/liviamarodrigues/hsynex/blob/main/github1.png>
 
-Example of testing images:
+**Example of testing images:**
 
 <img src=https://github.com/liviamarodrigues/hsynex/blob/main/qualitative_data.png>
 
+**Labels**
 
 | Label | Subregion |
 | ------| --------- |
