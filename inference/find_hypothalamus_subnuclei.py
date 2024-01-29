@@ -29,7 +29,7 @@ else:
 for idx, path in enumerate(list_input):
     print('working on:', path)
     find_input = CreateInput()
-    input_img, dilated_ss = find_input.extract_image(path, out_path_str)
+    input_img, dilated_ss, vdc = find_input.extract_image(path, out_path_str)
     print('create_input_done')
     inference = InVivoInference(device = args.device , voxres = args.voxres)
-    inference.predict(path, out_path_str, input_img, dilated_ss)
+    inference.predict(path, out_path_str, input_img, dilated_ss, vdc)

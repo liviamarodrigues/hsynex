@@ -3,6 +3,7 @@ import torch
 import scipy.ndimage
 import numpy as np
 import torch.nn as nn
+import torch.utils
 import nibabel as nib
 from utils import orientation, find_bbox
 from pytorch3dunet.unet3d.model import UNet3D
@@ -19,7 +20,7 @@ class InVivoInference():
         self.ckpt_subnuclei = 'https://github.com/liviamarodrigues/hsynex/releases/download/weights/subn_hypo.ckpt'
         
     def load_model(self, ckpt, model, idx):
-        teste_hyp = torch.utils.model_zoo.load_url(ckpt)
+        teste_hyp = torch.hub.load_state_dict_from_url(ckpt)
         tt_hyp = teste_hyp['state_dict']
         new_state_dict_seg_hyp = {}
         for keys_hyp, values_hyp in tt_hyp.items():
@@ -40,7 +41,7 @@ class InVivoInference():
         orig = nib.io_orientation(self.aff)
         targ = nib.io_orientation(original_affine)
         transform = ornt_transform(orig, targ)
-        pred_nifti = nib.Nifti1Image(prediction.float().cpu().numpy(), self.aff)
+        pred_nifti = nib.Nifti1Image(prediction, self.aff)
         pred_reor = pred_nifti.as_reoriented(transform).get_fdata()
         pred_HR = np.zeros((200,200,200))
         pred_HR[int(D1/2)-80:int(D1/2)+80, int(W1/2)-80:int(W1/2)+80, int(H1/2)-80:int(H1/2)+80] = pred_reor
@@ -49,7 +50,7 @@ class InVivoInference():
         final_pred[D-d:D+d, H-h:H+h, W-w:W+w] = pred_LR
         return final_pred
 
-    def input_adjust(self, input_img, dilated_ss):
+    def input_adjust(self, input_img, dilated_ss, vdc):
         img= orientation(input_img)
         self.aff = img.affine
         img_array = img.get_fdata()
@@ -59,11 +60,12 @@ class InVivoInference():
         D,W,H = self.img_shape[1], self.img_shape[2], self.img_shape[3]
         img_array_flip = img_array_flip[:, int(D/2)-80:int(D/2)+80, int(W/2)-80:int(W/2)+80, int(H/2)-80:int(H/2)+80]
         img_array = img_array[:, int(D/2)-80:int(D/2)+80, int(W/2)-80:int(W/2)+80, int(H/2)-80:int(H/2)+80]        
-        cropped_ss = dilated_ss[int(D/2)-80:int(D/2)+80, int(W/2)-80:int(W/2)+80, int(H/2)-80:int(H/2)+80]
+        cropped_ss = dilated_ss[int(D/2)-80:int(D/2)+80, int(W/2)-80:int(W/2)+80, int(H/2)-80:int(H/2)+80]     
+        cropped_vdc = vdc[int(D/2)-80:int(D/2)+80, int(W/2)-80:int(W/2)+80, int(H/2)-80:int(H/2)+80]
         input_torch = torch.from_numpy(img_array.astype(np.float16)).view(1,self.img_shape[0],160,160,160).to(self.device)
         input_torch_flip = torch.from_numpy(img_array_flip.astype(np.float16)).view(1,self.img_shape[0],160,160,160).to(self.device)
         cropped_torch_ss = torch.from_numpy(cropped_ss.astype(np.float16)).view(1,1,160,160,160).to(self.device)
-        return input_torch , input_torch_flip, cropped_torch_ss
+        return input_torch , input_torch_flip, cropped_torch_ss, cropped_vdc
 
     def find_logits(self, input, cropped_ss):    
         soft = nn.Softmax(dim=1) 
@@ -79,12 +81,12 @@ class InVivoInference():
             pred_subnuclei = model_subnuclei(final_input.float())   
         return pred_subnuclei
     
-    def pred_image(self, input_img, dilated_ss):     
+    def pred_image(self, input_img, dilated_ss, vdc):     
         soft = nn.Softmax(dim=1)    
         right_labels = [1,2,3,4,5,6] #prediction right hypothalamus labels 
         left_labels = [7,8,9,10,11,12] #prediction left hypothalamus labels 
         order_flip = [0]+left_labels+right_labels
-        input, input_flip,cropped_ss = self.input_adjust(input_img, dilated_ss)
+        input, input_flip,cropped_ss, cropped_vdc = self.input_adjust(input_img, dilated_ss, vdc)
         logit = self.find_logits(input, cropped_ss)
         logit_flip = self.find_logits(input_flip, cropped_ss.flip(dims=(2,)))
         prob_map = soft(logit)
@@ -92,14 +94,11 @@ class InVivoInference():
         prob_map_flip_organized = prob_map_flip[:, order_flip,...] #adjusting channels 
         prob_average = (prob_map_flip_organized+prob_map)/2 #averaging both predictions
         final_segmentation = prob_average[0].argmax(axis = 0)       
-        return final_segmentation
+        return final_segmentation.float().cpu().numpy()*cropped_vdc
 
-    def save_nifti(self, seg_final, save_path_nib, dilated_ss, original_affine, original_shape):
+    def save_nifti(self, seg_final, save_path_nib, original_affine, original_shape):
         if self.voxres == 'original':
-            seg_final = self.rescale_pred(seg_final, original_affine, original_shape)
-            synthseg_img = nib.load(self.ss_path).get_fdata()
-            ventral_DC = (synthseg_img==28).astype(int) + (synthseg_img==60).astype(int)
-            seg_final = seg_final*(ventral_DC>0)
+            seg_final = self.rescale_pred(seg_final, original_affine, original_shape) #cropping VDC to [160,160,160]
             nib_img_itk = nib.Nifti1Image(seg_final, original_affine)
         else:
             seg_final = seg_final.float().cpu().numpy()
@@ -110,7 +109,7 @@ class InVivoInference():
             nib_img_itk = nib.Nifti1Image(seg_final_save, self.aff)
         nib.save(nib_img_itk, save_path_nib)
 
-    def predict(self, original_path, save_path, input_img, dilated_ss):
+    def predict(self, original_path, save_path, input_img, dilated_ss, vdc):
         tmp_path = os.path.join(save_path, 'tmp') 
         name = os.path.basename(original_path)        
         img_original = nib.load(original_path)
@@ -118,10 +117,10 @@ class InVivoInference():
         self.ss_path = os.path.join(tmp_path,'ss_'+name)      ##   
         save_path_nib = os.path.join(save_path, 'hsynex_'+name)
         try:
-            final_segmentation = self.pred_image(input_img, dilated_ss)
+            final_segmentation = self.pred_image(input_img, dilated_ss, vdc)
             print('prediction DONE')
             print('saving...')
-            self.save_nifti(final_segmentation, save_path_nib,dilated_ss, img_original.affine, img_original.shape)
+            self.save_nifti(final_segmentation, save_path_nib, img_original.affine, img_original.shape)
             print('saved in', save_path_nib)
         except torch.cuda.OutOfMemoryError:
             raise MemoryError("CUDA out of memory. Try --device cpu")

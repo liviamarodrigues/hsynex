@@ -35,7 +35,7 @@ class CreateInput():
             synthseg_img[synthseg_img==lbl]=0        
         synthseg_img = synthseg_img[D-d:D+d, H-h:H+h, W-w:W+w]
         ventral_dc = (synthseg_img==28).astype(int) + (synthseg_img==60).astype(int)
-        return dilation(synthseg_img>0, elem), dilation(ventral_dc>0, elem)
+        return dilation(synthseg_img>0, elem), dilation(ventral_dc, elem), ventral_dc
         
     def find_masked(self, original):        
         original_img = original.get_fdata() 
@@ -44,11 +44,11 @@ class CreateInput():
         D,H,W = self.coords
         d,h,w = self.gap
         cropped_img = original_img[D-d:D+d, H-h:H+h, W-w:W+w]
-        dilated_ss, ventral_dc = self.adjust_ss_mask (D,H,W,d,h,w)        
+        dilated_ss, dil_ventral_dc, vdc = self.adjust_ss_mask (D,H,W,d,h,w)        
         cropped_bak = bak_img[D-d:D+d, H-h:H+h, W-w:W+w,:]/100
-        masked_img = dilated_ss*cropped_img        
+        masked_img = dilated_ss*cropped_img   #exclude CSF and cerebelum      
         normalized_img = (masked_img - masked_img.min())/(masked_img.max()-masked_img.min())
-        return normalized_img, cropped_bak, ventral_dc
+        return normalized_img, cropped_bak, dil_ventral_dc, vdc
 
     def adjust_affine(self, affine):        
         D,H,W = self.coords
@@ -66,12 +66,13 @@ class CreateInput():
     def extract_image(self, original_path, save_path):     
         name = os.path.basename(original_path)
         self.create_tmp_files(original_path, save_path)    
-        print('SynthSeg DONE')
+        print('EasyReg DONE')
         original = orientation(nib.load(original_path))
-        masked_img, cropped_bak, ventral_dc = self.find_masked(original)
+        masked_img, cropped_bak, dil_ventral_dc, vdc = self.find_masked(original)
         corrected_affine, factor = self.adjust_affine(original.affine)   
         rescaled_img = scipy.ndimage.zoom(masked_img, [factor[0], factor[1], factor[2]], order =1, grid_mode = True, mode = 'grid-constant')
-        rescaled_ss = scipy.ndimage.zoom(ventral_dc, [factor[0], factor[1], factor[2]], order =0, grid_mode = True, mode = 'grid-constant')
+        rescaled_dil_vdc = scipy.ndimage.zoom(dil_ventral_dc, [factor[0], factor[1], factor[2]], order =0, grid_mode = True, mode = 'grid-constant')
+        rescaled_vdc = scipy.ndimage.zoom(vdc, [factor[0], factor[1], factor[2]], order =0, grid_mode = True, mode = 'grid-constant')
         rescaled_bak = scipy.ndimage.zoom(cropped_bak, [factor[0], factor[1], factor[2],1], order =1, grid_mode = True,mode = 'grid-constant').transpose(3,0,1,2)  
         final_input = np.concatenate((rescaled_img[np.newaxis,:], rescaled_bak), axis=0)
-        return nib.Nifti1Image(final_input, corrected_affine), rescaled_ss>0
+        return nib.Nifti1Image(final_input, corrected_affine), rescaled_dil_vdc>0, rescaled_vdc>0 
