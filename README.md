@@ -52,3 +52,8 @@ This repository also relies on a modified implementation of [pytorch-3dunet](htt
 Finally, it is necessary to install [FreeSurfer](https://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) 7.4
 
 ## CITATION
+
+If you use H-SynEx in your project, please cite:
+
+[[arXiv](https://arxiv.org/pdf/2401.17104.pdf)]: Rodrigues, Livia, et al. **"H-SynEx: Using synthetic images and ultra-high resolution ex vivo MRI for hypothalamus subregion segmentation."** arXiv preprint arXiv:2401.17104 (2024).
+
