@@ -25,11 +25,25 @@ The model was trained on synthetic images derived from ex vivo MRI label maps:
 | 10 | right tuberal superior |
 | 12 | right anterior superior |
 
+### DEPENDENCIES
+
+This code was implemented using Python 3.10. 
+
+You can install libs using the environment.yml file:
+
+```
+conda env create -f environment.yml
+```
+
+This repository also relies on a modified implementation of [pytorch-3dunet](https://github.com/wolny/pytorch-3dunet), which is already included.
+
+Finally, it is necessary to install [FreeSurfer](https://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) 7.4
+
 ## USAGE
 
 To use the tool, please follow the following steps:
 
-- Download this repository 
+- Download this repository
 - Using the terminal, enter the inference folder:
   
        cd <your_path>/hsynex/inference
@@ -42,14 +56,6 @@ Where:
 
 - `<input_path>` is the path where the input MR images are located
 - `<out_path>` is the chosen path to save the segmentations
-
-### DEPENDENCIES
-
-This code was implemented using Python 3.10. To run it, install the dependencies listed at `requirements.txt`.
-
-This repository also relies on a modified implementation of [pytorch-3dunet](https://github.com/wolny/pytorch-3dunet), which is already included.
-
-Finally, it is necessary to install [FreeSurfer](https://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) 7.4
 
 ## CITATION
 
